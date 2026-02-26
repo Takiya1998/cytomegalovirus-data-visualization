@@ -1,0 +1,117 @@
+#TP sur les graphiques cytomégalovirus de PALOMBIER William (version python):
+
+# Ouverture des fichiers
+
+from google.colab import files
+uploaded = files.upload()
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+df = pd.read_excel('Cytomegalovirus.xlsx')
+print(df)
+
+
+#Modification des variables car incohérence:
+
+df['ID']=df['ID'].astype(str)
+df['prior chemo']=df['prior chemo'].astype(str)
+df['TBI dose']=df['TBI dose'].astype(str)
+df ['aKIRs'] = df ['aKIRs'].astype (str)
+df['sex']=df['sex'].replace(0,"Female")
+df['sex']=df['sex'].replace(1,"Male")
+df['diagnosis type']=df['diagnosis type'].replace(1,"Myeloid")
+df["diagnosis type"]=df["diagnosis type"].replace(0,"Lymphoid")
+df["prior transplant"]=df["prior transplant"].replace(0,"No")
+df["prior transplant"]=df["prior transplant"].replace(1,"Yes")
+df["race"]=df["race"].replace(1,"White")
+df["race"]=df["race"].replace(1,"African American")
+df["prior radiation"]=df["prior radiation"].replace(0,"No")
+df["prior radiation"]=df["prior radiation"].replace(1,"Yes")
+df["recipient cmv"]=df["recipient cmv"].replace(1,"Positive")
+df["recipient cmv"]=df["recipient cmv"].replace(0,"Negative")
+df["donor cmv"]=df["donor cmv"].replace(0,"Negative")
+df["donor cmv"]=df["donor cmv"].replace(1,"Positive")
+df["C1/C2"]=df["C1/C2"].replace(0,"Heterozygous")
+df["C1/C2"]=df["C1/C2"].replace(1,"Homozygous")
+df["cmv"]=df["C1/C2"].replace(1,"Homozygous")
+df["agvhd"]=df["agvhd"].replace(1,"Yes")
+df["agvhd"]=df["agvhd"].replace(0,"No")
+df["cgvhd"]=df["cgvhd"].replace(0,"No")
+df["cgvhd"]=df["cgvhd"].replace(1,"Yes")
+
+# Configuration du style pour thème sombre
+plt.style.use('dark_background')
+sns.set_palette("husl")
+
+# Graphique 1 ("boîte à moustaches multivariée") : Distribution de l'âge selon le sexe et le diagnostic
+plt.figure(figsize=(12, 6))
+ax = sns.boxplot(data=df, x='diagnosis type', y='age', hue='sex')
+plt.title('Distribution de l\'âge par type de diagnostic et sexe', pad=20, fontsize=14, color='white')
+plt.xlabel('Type de diagnostic', fontsize=12, color='white')
+plt.ylabel('Âge (années)', fontsize=12, color='white')
+plt.grid(True, alpha=0.2, color='gray')
+plt.xticks(fontsize=10, color='white')
+plt.yticks(fontsize=10, color='white')
+plt.legend(title='Sexe', title_fontsize=10, fontsize=10)
+
+# Configuration du fond noir
+plt.gca().set_facecolor('black')
+plt.gcf().set_facecolor('black')
+
+# Ajustement des couleurs de la boîte à moustaches pour plus de contraste sur fond noir
+colors = ['#FF9671', '#00D2FC']
+for i, artist in enumerate(ax.artists):
+    artist.set_facecolor(colors[i % len(colors)])
+
+plt.savefig('age_distribution_dark.png', dpi=300, bbox_inches='tight', facecolor='black')
+plt.close()
+
+# Graphique 2 ("graphique à barres empilées") : Statut CMV des donneurs et receveurs selon le type de diagnostic
+plt.figure(figsize=(10, 6))
+
+# Création d'un tableau croisé
+cmv_status = pd.crosstab([df['diagnosis type'], df['donor cmv']], 
+                        df['recipient cmv'], 
+                        normalize='index') * 100
+
+# Création du graphique à barres empilées avec des couleurs vives
+colors = ['#FF9671', '#00D2FC']
+ax = cmv_status.plot(kind='bar', stacked=True, color=colors)
+
+plt.title('Statut CMV des donneurs et receveurs par type de diagnostic', 
+         pad=20, fontsize=14, color='white')
+plt.xlabel('Type de diagnostic - Statut CMV du donneur', fontsize=12, color='white')
+plt.ylabel('Pourcentage (%)', fontsize=12, color='white')
+
+# Rotation des labels de l'axe x
+plt.xticks(rotation=45, ha='right', color='white')
+plt.yticks(color='white')
+
+# Ajout d'une grille légère
+plt.grid(True, axis='y', alpha=0.2, color='gray')
+
+# Personnalisation de la légende
+plt.legend(title='Statut CMV du receveur', 
+          bbox_to_anchor=(1.05, 1), 
+          loc='upper left',
+          labelcolor='white',
+          title_fontsize=10,
+          fontsize=10)
+
+# Ajout des pourcentages sur les barres avec couleur blanche
+for c in ax.containers:
+    ax.bar_label(c, fmt='%.1f%%', label_type='center', color='white')
+
+# Configuration du fond noir
+plt.gca().set_facecolor('black')
+plt.gcf().set_facecolor('black')
+
+# Ajustement de la mise en page
+plt.tight_layout()
+
+OPTIONNEL:
+(# Sauvegarde du graphique
+#Une résolution élevée pour l'export (300 dpi)
+plt.savefig('cmv_status_dark.png', dpi=300, bbox_inches='tight', facecolor='black')
+plt.close())
